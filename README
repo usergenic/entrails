@@ -1,0 +1,8 @@
+=== Entrails ===
+
+This is a collection of extensions to Rails internals that I've found to be absolutely indispensible
+since I implimented them.
+
+== Entrails::ActiveRecord::BetterConditions ==
+
+== Entrails::ActiveRecord::FindByAssociation ==
