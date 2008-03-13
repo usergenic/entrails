@@ -4,8 +4,95 @@
 # other benefits, that conditions hashes may therefore be nested as deep as your database engine's
 # support for nested subqueries allows.
 #
-# Below is a schema, some model definitions, and some example uses, which I will leave here as
-# documentation, until such time as I am able to provide *actual* documentation.  Please forgive me.
+# One of the greatest benefits of an Object-Relational-Mapping system like ActiveRecord, 
+# is the ability to express the associations between objects. We’ve all written code 
+# like this before:
+# 
+#   class Category < ActiveRecord::Base
+#     has_many :posts
+#   end
+#   class Post < ActiveRecord::Base
+#     belongs_to :author, :class_name  => 'User', :foreign_key => :author_id
+#     belongs_to :category
+#   end
+#   class User < ActiveRecord::Base
+#     has_many :posts, :foreign_key => :author_id
+#   end
+#
+# Assume you have two instance variables: @category and @user. If you wanted to find all 
+# the Posts for the @user, it would be as simple as referencing @user.posts. If you wanted
+# to find all the Posts for @category, you reference @category.posts. But how do you get
+# an intersection of the two collections?
+# 
+# The find_by_association plugin is designed to make it easy to reference associations in
+# finder conditions hashes and dynamic finders. For example, to get all the Posts for a 
+# specific category and author, you can use a dynamic finder, a conditions hash, or a 
+# combination:
+# 
+# Conditions Hash
+#   Post.find(:all, :conditions => {:author => @author, :category => @category})
+# 
+# Dynamic Finder
+#   Post.find_all_by_category_and_author(@category, @author)
+# 
+# Combination
+#   Post.find_all_by_category(@category, :conditions => {:author => @author})
+#
+# Pretty neat trick, but it gets a lot neater. What if you wanted to find all Posts where 
+# the author’s first name was ‘Joe’? find_by_association gives us the ability to include
+# references to the associated objects’ attributes:
+# 
+# Conditions Hash
+#   Post.find(:all, :conditions => {:author => {:first_name => 'Joe'}})
+# 
+# Dynamic Finder
+#   Post.find_all_by_author_having_first_name('Joe')
+#
+# Notice in the Dynamic Finder example, the keyword having expresses that we are looking
+# for at the first_name attribute on the referenced author object. Cool!
+# 
+# We can even nest our conditions further — Lets say we wanted to find all the Categories
+# that Users with first_name of ‘Joe’ have written Posts about:
+# 
+# Conditions Hash
+#   Category.find(:all, :conditions => { :posts => { :author => {:first_name => 'Joe'}}})
+# 
+# Dynamic Finder
+#   Category.find_all_by_posts_having_author_having_first_name('Joe')
+#
+# Notice that we referenced a has_many association, posts, in the same way we referenced the
+# belongs_to association author. find_by_association can handle all the standard association
+# macros: has_many, has_many :through, has_and_belongs_to_many, belongs_to, and has_one.
+# 
+# The only place where you run into some trickiness, is trying to nest conditions that reference
+# a belongs_to association that with a :polymorphic => true option. You can do so, but you have
+# to provide a foreign_type value. For example:
+# 
+#   class Authorship < ActiveRecord::Base
+#     belongs_to :author, :class_name => 'User', :foreign_key => :author_id
+#     belongs_to :work, :polymorphic => true
+#   end
+#   class Article < ActiveRecord::Base
+#     has_many :authorships, :as => :work
+#     has_many :authors, :through => :authorships
+#   end
+#   class Book < ActiveRecord::Base
+#     has_many :authorships, :as => :work
+#     has_many :authors, :through => :authorships
+#   end
+# 
+# Notice I must provide the :work_type key to the conditions
+# to inform find_by_association what model to include in the
+# subquery to find a title attribute.
+# 
+#   Authorship.find :all, :conditions => {
+#     :work => {:title => 'Writing Cool Rails Plugins'},
+#     :work_type => 'Book'
+#   }
+# 
+# Below is a schema, with some model definitions, and some additional example
+# uses, which I will leave here as documentation, until such time as I am able
+# to provide *actual* documentation.  Please forgive me.
 #
 # Migration/Schema.rb table definitions:
 #
