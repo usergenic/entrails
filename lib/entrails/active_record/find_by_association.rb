@@ -59,11 +59,18 @@
 # 
 # Find all of the Customers who ordered a Product named "Squirting Flower"...
 #   Customer.find(:all, :conditions => {:orders => {:products => {:name => "Squirting Flower"}}})
-#   Customer.find_all_by_orders_having_products_having_name("Squirting Flower")
+#   Customer.find_all_by_orders_having_products_having_name("Squirting Flower") # <= or use a dynamic finder method
+#   => [#<Customer id: 1, name: "Fozzy">]
 #
 # Whoa-- did you see what happened there?  We got nested a reference to the :name column in a
 # has_many :through inside a has_many association on Customer.  And we delegated all the work
-# to the database in a single statement!  Yee-haw.
+# to the database in a single statement!  Yee-haw.  What's the SQL look like? (indented for
+# readability.)
+#
+#   SELECT * FROM customers WHERE ( customers."id" IN (
+#     SELECT customer_id FROM orders WHERE ( orders."id" IN (
+#       SELECT order_id FROM order_items WHERE ( order_items."product_id" IN (
+#         SELECT id FROM products WHERE (products."name" = 'Squirting Flower')))))))
 #
 # You think that's nice, you should see what happens when you combine FindByAssociation with
 # the rest of Entrails' ActiveRecord extensions...
