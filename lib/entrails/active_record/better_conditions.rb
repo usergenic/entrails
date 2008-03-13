@@ -14,6 +14,45 @@
 #
 #   ((NOT (status='suspended')) OR (username='root')) AND (pass='123')
 #
+# Some further examples:
+# 
+#   class CreatePeople < ActiveRecord::Migration
+#     create_table :people do |t|
+#       t.column :name,   :string
+#       t.column :job,    :string
+#       t.column :age,    :integer
+#       t.column :living, :boolean
+#     end
+#   end
+#   
+#   class Person < ActiveRecord::Base
+#   end
+# 
+# Use an array containing hashes or arrays to express OR... 
+# Finds everyone who is either dead OR over 30 years old.
+# 
+#   Person.find :all, :conditions => [{:living => false},["age > ?", 30]]
+# 
+# Using the :all predicate at the head of an array...
+# Finds everyone who is alive AND 30 years old or younger.
+# 
+#   Person.find :all, :conditions => [:all, {:living => true},["age <= ?", 30]]
+# 
+# Using the :not predicate at the head of an array...
+# Finds everyone who is NOT named 'Alice'.
+# 
+#   Person.find :all, :conditions => [:not, {:name => 'Alice'}]
+# 
+# Nesting arrays within arrays... Ruby Arrays become S-Expressions...
+# Finds everyone who is NOT either of these
+#   1.) dead or over 30
+#   2.) alive and 30 or under
+# 
+#   Person.find :all, :conditions => [:not,
+#     [{:living => false},["age > ?", 30]], 
+#     [:all, {:living => true},["age <= ?", 30]]
+#   ]
+# 
 module Entrails::ActiveRecord::BetterConditions
   
   protected
