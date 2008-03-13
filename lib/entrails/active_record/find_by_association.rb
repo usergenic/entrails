@@ -1,8 +1,8 @@
 # This module extends the behavior of ActiveRecord::Base to support using association names
 # directly in conditions hashes for finders.  Because this patches sanitize_sql_hash[_for_conditions]
-# it "extends elegantly to support the means of combination" (to quote Hal Abelson) meaning that
-# conditions hashes may therefore be nested as deep as your database engine's support for nested
-# subqueries goes.
+# it "extends elegantly to private the means of combination" (to quote Hal Abelson) meaning, among
+# other benefits, that conditions hashes may therefore be nested as deep as your database engine's
+# support for nested subqueries allows.
 #
 # Below is a schema, some model definitions, and some example uses, which I will leave here as
 # documentation, until such time as I am able to provide *actual* documentation.  Please forgive me.
