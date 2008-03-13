@@ -1,3 +1,19 @@
+# Was toying with calling this SexyConditions, since its basically about extending the
+# use of Arrays as ActiveRecord finder conditions, to serve as symbolic expressions ala
+# Lisp, (hence the Sex in S-Expression,) but frankly the name BetterConditions has been
+# in use in our shop's vocabulary since it was created, and it stuck.
+#
+# So what exactly does this do?  It enables you to construct nested logical expressions
+# using symbolic prefix notation, such that [:and, 'condition1', 'condition2'] produces
+# the fragment "(condition1) AND (condition2)".  Since it delegates back to sanitize_sql
+# it plays nicely with other extensions, like find_by_association as well as nesting ala...
+#
+#   [:and, [:or, [:not, {:status => 'suspended'}], {:username => 'root'}]], {:pass => "123"}]]
+#
+# to produce something like the following SQL partial for conditions...
+#
+#   ((NOT (status='suspended')) OR (username='root')) AND (pass='123')
+#
 module Entrails::ActiveRecord::BetterConditions
   
   protected
