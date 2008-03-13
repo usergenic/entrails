@@ -55,7 +55,7 @@ module Entrails::ActiveRecord::BetterConditions
   def self.extended(host)
     super
     class << host
-      alias_method_chain :sanitize_sql,       :better_conditions
+      alias_method_chain :sanitize_sql, :better_conditions
       alias_method_chain :sanitize_sql_array, :better_conditions
     end
   end
