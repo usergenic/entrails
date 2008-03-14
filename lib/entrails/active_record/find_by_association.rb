@@ -92,7 +92,7 @@ module Entrails::ActiveRecord::FindByAssociation
         association_klass.__send__(:construct_finder_sql, options_for_find_by_association_subquery(association, nil, association_klass))
       end
 
-    nil_subquery_sql = "(SELECT _id FROM (#{nil_subquery_sql}) _tmp)" # MySQL derived table +hack+
+    nil_subquery_sql = "(SELECT _id FROM (#{nil_subquery_sql}) _tmp)" if use_derived_table_hack_for_subquery_optimization?
 
     case association.macro
     when :belongs_to : "#{table_name}.#{connection.quote_column_name(association.primary_key_name)} NOT IN " <<
@@ -136,7 +136,7 @@ module Entrails::ActiveRecord::FindByAssociation
       options_for_find_by_association_conditions_subquery(association, conditions, :type => association_type, 
                                                                                    :through_type => through_type))
 
-      subquery_sql &&= "(SELECT _id FROM (#{subquery_sql}) _tmp)" # MySQL derived table +hack+
+      subquery_sql &&= "(SELECT _id FROM (#{subquery_sql}) _tmp)" if use_derived_table_hack_for_subquery_optimization?
 
       case association.macro
       when :belongs_to : "#{table_name}.#{connection.quote_column_name(association.primary_key_name)} IN (#{subquery_sql})"
@@ -151,41 +151,6 @@ module Entrails::ActiveRecord::FindByAssociation
       end
 
     end
-  end
-
-  def options_for_find_by_association_conditions_subquery(association, conditions, options={})
-
-    association_type, through_type = options[:type], options[:through_type]
-    association = reflect_on_association(association) unless association.is_a? ActiveRecord::Reflection::AssociationReflection
-    
-    association.options[:polymorphic] and !association_type and
-      raise "Polymorphic belongs_to associations require the :type argument for options_for_find_by_association_conditions_subquery."
-
-    association_type ||= association_type.is_a?(String) ? association_type.constantize : association.klass
-
-    options = {}
-    
-    key_column = case association.macro
-                 when :belongs_to,
-                      :has_and_belongs_to_many : association_type.primary_key
-                 else association.primary_key_name
-                 end
-
-    options[:select] = "#{key_column} _id"
-    segments = []
-    segments << "#{key_column} IS NOT NULL"
-    conditions and segments << association_type.__send__(:sanitize_sql, conditions)
-    association.options[:conditions] and segments << association_type.__send__(:sanitize_sql, association.options[:conditions])
-    association.options[:as] and segments << association_type.__send__(:sanitize_sql, (association_klass.reflect_on_association(association.options[:as].to_sym).options[:foreign_type] || :"#{association.options[:as]}_type").to_sym => (through_type||self.to_s))
-    segments.reject! {|c|c.blank?}
-    options[:conditions] = segments.size > 1 ? "(#{segments.join(') AND (')})" : segments.first unless segments.empty?
-
-    # subqueries in MySQL can not use order or limit
-    # options[:order] = association.options[:order] if association.options[:order]
-    # options[:limit] = association.options[:limit] if association.options[:limit]
-
-    options
-
   end
   
   # Update the dynamic finders to allow referencing association names instead of
@@ -231,6 +196,49 @@ module Entrails::ActiveRecord::FindByAssociation
 
     method_missing_without_find_by_association method_id, *arguments
 
+  end
+
+  def options_for_find_by_association_conditions_subquery(association, conditions, options={})
+
+    association_type, through_type = options[:type], options[:through_type]
+    association = reflect_on_association(association) unless association.is_a? ActiveRecord::Reflection::AssociationReflection
+    
+    association.options[:polymorphic] and !association_type and
+      raise "Polymorphic belongs_to associations require the :type argument for options_for_find_by_association_conditions_subquery."
+
+    association_type ||= association_type.is_a?(String) ? association_type.constantize : association.klass
+
+    options = {}
+    
+    key_column = case association.macro
+                 when :belongs_to,
+                      :has_and_belongs_to_many : association_type.primary_key
+                 else association.primary_key_name
+                 end
+
+    options[:select] = "#{key_column} _id"
+    segments = []
+    segments << "#{key_column} IS NOT NULL"
+    conditions and segments << association_type.__send__(:sanitize_sql, conditions)
+    association.options[:conditions] and segments << association_type.__send__(:sanitize_sql, association.options[:conditions])
+    association.options[:as] and segments << association_type.__send__(:sanitize_sql, (association_klass.reflect_on_association(association.options[:as].to_sym).options[:foreign_type] || :"#{association.options[:as]}_type").to_sym => (through_type||self.to_s))
+    segments.reject! {|c|c.blank?}
+    options[:conditions] = segments.size > 1 ? "(#{segments.join(') AND (')})" : segments.first unless segments.empty?
+
+    # subqueries in MySQL can not use order or limit
+    # options[:order] = association.options[:order] if association.options[:order]
+    # options[:limit] = association.options[:limit] if association.options[:limit]
+
+    options
+
+  end
+  
+  # This is an affordance to turn on/off the use of a wrapper query that generates
+  # an aliased derived table for the purpose of query-plan optimization for some
+  # database engines.  This hack has been shown to significantly benefit query times
+  # for mysql and sqlite3. (has not yet been tested with other engines.)
+  def use_derived_table_hack_for_subquery_optimization?
+    true
   end
   
   def self.extended(host)
