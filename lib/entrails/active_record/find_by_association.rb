@@ -1,167 +1,3 @@
-# This module extends the behavior of ActiveRecord::Base to support using association names
-# directly in conditions hashes for finders.  Because this patches sanitize_sql_hash[_for_conditions]
-# it "extends elegantly to private the means of combination" (to quote Hal Abelson) meaning, among
-# other benefits, that conditions hashes may therefore be nested as deep as your database engine's
-# support for nested subqueries allows.
-#
-# One of the greatest benefits of an Object-Relational-Mapping system like ActiveRecord, 
-# is the ability to express the associations between objects. We’ve all written code 
-# like this before:
-# 
-#   class Category < ActiveRecord::Base
-#     has_many :posts
-#   end
-#   class Post < ActiveRecord::Base
-#     belongs_to :author, :class_name  => 'User', :foreign_key => :author_id
-#     belongs_to :category
-#   end
-#   class User < ActiveRecord::Base
-#     has_many :posts, :foreign_key => :author_id
-#   end
-#
-# Assume you have two instance variables: @category and @user. If you wanted to find all 
-# the Posts for the @user, it would be as simple as referencing @user.posts. If you wanted
-# to find all the Posts for @category, you reference @category.posts. But how do you get
-# an intersection of the two collections?
-# 
-# The find_by_association plugin is designed to make it easy to reference associations in
-# finder conditions hashes and dynamic finders. For example, to get all the Posts for a 
-# specific category and author, you can use a dynamic finder, a conditions hash, or a 
-# combination:
-# 
-# Conditions Hash
-#   Post.find(:all, :conditions => {:author => @author, :category => @category})
-# 
-# Dynamic Finder
-#   Post.find_all_by_category_and_author(@category, @author)
-# 
-# Combination
-#   Post.find_all_by_category(@category, :conditions => {:author => @author})
-#
-# Pretty neat trick, but it gets a lot neater. What if you wanted to find all Posts where 
-# the author’s first name was ‘Joe’? find_by_association gives us the ability to include
-# references to the associated objects’ attributes:
-# 
-# Conditions Hash
-#   Post.find(:all, :conditions => {:author => {:first_name => 'Joe'}})
-# 
-# Dynamic Finder
-#   Post.find_all_by_author_having_first_name('Joe')
-#
-# Notice in the Dynamic Finder example, the keyword having expresses that we are looking
-# for at the first_name attribute on the referenced author object. Cool!
-# 
-# We can even nest our conditions further — Lets say we wanted to find all the Categories
-# that Users with first_name of ‘Joe’ have written Posts about:
-# 
-# Conditions Hash
-#   Category.find(:all, :conditions => { :posts => { :author => {:first_name => 'Joe'}}})
-# 
-# Dynamic Finder
-#   Category.find_all_by_posts_having_author_having_first_name('Joe')
-#
-# Notice that we referenced a has_many association, posts, in the same way we referenced the
-# belongs_to association author. find_by_association can handle all the standard association
-# macros: has_many, has_many :through, has_and_belongs_to_many, belongs_to, and has_one.
-# 
-# The only place where you run into some trickiness, is trying to nest conditions that reference
-# a belongs_to association that with a :polymorphic => true option. You can do so, but you have
-# to provide a foreign_type value. For example:
-# 
-#   class Authorship < ActiveRecord::Base
-#     belongs_to :author, :class_name => 'User', :foreign_key => :author_id
-#     belongs_to :work, :polymorphic => true
-#   end
-#   class Article < ActiveRecord::Base
-#     has_many :authorships, :as => :work
-#     has_many :authors, :through => :authorships
-#   end
-#   class Book < ActiveRecord::Base
-#     has_many :authorships, :as => :work
-#     has_many :authors, :through => :authorships
-#   end
-# 
-# Notice I must provide the :work_type key to the conditions
-# to inform find_by_association what model to include in the
-# subquery to find a title attribute.
-# 
-#   Authorship.find :all, :conditions => {
-#     :work => {:title => 'Writing Cool Rails Plugins'},
-#     :work_type => 'Book'
-#   }
-# 
-# Below is a schema, with some model definitions, and some additional example
-# uses, which I will leave here as documentation, until such time as I am able
-# to provide *actual* documentation.  Please forgive me.
-#
-# Migration/Schema.rb table definitions:
-#
-#   create_table :customers do |t|
-#     t.string :name
-#   end
-#   create_table :products do |t|
-#     t.string :name
-#   end
-#   create_table :orders do |t|
-#     t.references :customer
-#   end
-#   create_table :order_items do |t|
-#     t.references :product, :order
-#     t.integer :quantity
-#   end
-#
-# Define the Model Classes:
-#
-#   class Customer < ActiveRecord::Base
-#     has_many :orders
-#   end
-#   class Order < ActiveRecord::Base
-#     belongs_to :customer
-#     has_many :items, :class_name => 'OrderItem'
-#     has_many :products, :through => :items
-#   end
-#   class OrderItem < ActiveRecord::Base
-#     belongs_to :order
-#     belongs_to :product
-#   end
-#   class Product < ActiveRecord::Base
-#     has_many :order_items
-#     has_many :orders, :through => :order_items
-#   end
-#
-# Create a dataset:
-#
-#   banana = Product.create(:name => "Electric Banana")
-#   flower = Product.create(:name => "Squirting Flower")
-#   wocka = Product.create(:name => "Wocka-Wocka-Wocka")
-#   fozzy = Customer.create(:name => "Fozzy")
-#   order1 = fozzy.orders.create
-#   order1.items.create :product => banana, :quantity => 1
-#   order1.items.create :product => wocka, :quantity => 3
-#   order2 = fozzy.orders.create
-#   order2.items.create :product => wocka, :quantity => 5
-#   order2.items.create :product => flower, :quantity => 1
-#
-# Lets "Find-by-association"!
-# 
-# Find all of the Customers who ordered a Product named "Squirting Flower"...
-#   Customer.find(:all, :conditions => {:orders => {:products => {:name => "Squirting Flower"}}})
-#   Customer.find_all_by_orders_having_products_having_name("Squirting Flower") # <= or use a dynamic finder method
-#   => [#<Customer id: 1, name: "Fozzy">]
-#
-# Whoa-- did you see what happened there?  We got nested a reference to the :name column in a
-# has_many :through inside a has_many association on Customer.  And we delegated all the work
-# to the database in a single statement!  Yee-haw.  What's the SQL look like? (indented for
-# readability.)
-#
-#   SELECT * FROM customers WHERE ( customers."id" IN (
-#     SELECT customer_id FROM orders WHERE ( orders."id" IN (
-#       SELECT order_id FROM order_items WHERE ( order_items."product_id" IN (
-#         SELECT id FROM products WHERE (products."name" = 'Squirting Flower')))))))
-#
-# You think that's nice, you should see what happens when you combine FindByAssociation with
-# the rest of Entrails' ActiveRecord extensions...
-#
 module Entrails::ActiveRecord::FindByAssociation
   
   protected
@@ -224,8 +60,10 @@ module Entrails::ActiveRecord::FindByAssociation
       else false
       end
 
+    segments = []
+
     # To handle has_many :through, lets process the through_reflection and then send over the conditions...
-    conditions.blank? or subquery_sql =
+    conditions.blank? or segments <<
       if association.options[:through]
         through_association = reflect_on_association(association.through_reflection.name)
         source_association ||= through_association.klass.reflect_on_association(association.options[:source])
@@ -238,21 +76,6 @@ module Entrails::ActiveRecord::FindByAssociation
           through_association, { source_association.name => conditions }, :through_type => name)
       else
         construct_find_by_association_conditions_subquery_sql(association, conditions, :type => association_type)
-      end
-    
-    segments = []
-
-    subquery_sql and segments <<
-      case association.macro
-      when :belongs_to
-        "#{table_name}.#{connection.quote_column_name(association.primary_key_name)} IN (#{subquery_sql})"
-      when :has_and_belongs_to_many
-        "#{table_name}.#{connection.quote_column_name(primary_key)} IN (SELECT #{connection.quote_column_name(association.primary_key_name)} FROM #{association.options[:join_table]} WHERE #{connection.quote_column_name(association.association_foreign_key)} IN (#{subquery_sql}))"
-      when :has_one
-        "#{table_name}.#{connection.quote_column_name(primary_key)} IN (#{subquery_sql})"
-      when :has_many
-        "#{table_name}.#{connection.quote_column_name(primary_key)} IN (#{subquery_sql})"
-      else raise "Unrecognized Association Macro '#{association.macro}' not supported by FindByAssociation."
       end
 
     nil_condition and segments << construct_find_by_association_conditions_nil_condition_sql(association)
@@ -269,19 +92,19 @@ module Entrails::ActiveRecord::FindByAssociation
         association_klass.__send__(:construct_finder_sql, options_for_find_by_association_subquery(association, nil, association_klass))
       end
 
+    nil_subquery_sql = "(SELECT _id FROM (#{nil_subquery_sql}) _tmp)" # MySQL derived table +hack+
+
     case association.macro
-    when :belongs_to
-      "#{table_name}.#{connection.quote_column_name(association.primary_key_name)} NOT IN (#{nil_subquery_sql}) OR " <<
-        "#{table_name}.#{connection.quote_column_name(association.primary_key_name)} IS NULL"
-    when :has_one
-      "#{table_name}.#{connection.quote_column_name(primary_key)} NOT IN (#{nil_subquery_sql})"
-    when :has_many
-      "#{table_name}.#{connection.quote_column_name(primary_key)} NOT IN (#{nil_subquery_sql})"
-    when :has_and_belongs_to_many
-      "#{table_name}.#{connection.quote_column_name(primary_key)} NOT IN (SELECT #{connection.quote_column_name(association.primary_key_name)} FROM #{association.options[:join_table]} WHERE #{connection.quote_column_name(association.association_foreign_key)} IN (#{nil_subquery_sql}))"
-    else
-      # other association types are not supported for :association_name => nil type finds for now.
-      raise "Find by association currently only supports find on nil for :belongs_to type associations."
+    when :belongs_to : "#{table_name}.#{connection.quote_column_name(association.primary_key_name)} NOT IN " <<
+                       "(#{nil_subquery_sql}) OR #{table_name}.#{connection.quote_column_name(association.primary_key_name)} IS NULL"
+    when :has_one    : "#{table_name}.#{connection.quote_column_name(primary_key)} NOT IN (#{nil_subquery_sql})"
+    when :has_many   : "#{table_name}.#{connection.quote_column_name(primary_key)} NOT IN (#{nil_subquery_sql})"
+    when :has_and_belongs_to_many : "#{table_name}.#{connection.quote_column_name(primary_key)} NOT IN " <<
+                                    "(SELECT #{connection.quote_column_name(association.primary_key_name)} " <<
+                                    "FROM #{association.options[:join_table]} WHERE " <<
+                                    "#{connection.quote_column_name(association.association_foreign_key)} IN " <<
+                                    "(#{nil_subquery_sql}))"
+    else raise "FindByAssociation does not recognize the '#{association.macro}' association macro."
     end
     
   end
@@ -309,12 +132,29 @@ module Entrails::ActiveRecord::FindByAssociation
       conditions = { association_type.primary_key => ids }
     end
 
-    conditions and association_type.__send__(:construct_finder_sql, options_for_find_by_association_conditions_subquery(
-      association, conditions, :type => association_type, :through_type => through_type))
+    if conditions and subquery_sql = association_type.__send__(:construct_finder_sql, 
+      options_for_find_by_association_conditions_subquery(association, conditions, :type => association_type, 
+                                                                                   :through_type => through_type))
 
+      subquery_sql &&= "(SELECT _id FROM (#{subquery_sql}) _tmp)" # MySQL derived table +hack+
+
+      case association.macro
+      when :belongs_to : "#{table_name}.#{connection.quote_column_name(association.primary_key_name)} IN (#{subquery_sql})"
+      when :has_and_belongs_to_many : "#{table_name}.#{connection.quote_column_name(primary_key)} IN " <<
+                                      "(SELECT #{connection.quote_column_name(association.primary_key_name)} " <<
+                                      "FROM #{association.options[:join_table]} WHERE " <<
+                                      "#{connection.quote_column_name(association.association_foreign_key)} IN " <<
+                                      "(#{subquery_sql}))"
+      when :has_one  : "#{table_name}.#{connection.quote_column_name(primary_key)} IN (#{subquery_sql})"
+      when :has_many : "#{table_name}.#{connection.quote_column_name(primary_key)} IN (#{subquery_sql})"
+      else raise "Unrecognized Association Macro '#{association.macro}' not supported by FindByAssociation."
+      end
+
+    end
   end
 
   def options_for_find_by_association_conditions_subquery(association, conditions, options={})
+
     association_type, through_type = options[:type], options[:through_type]
     association = reflect_on_association(association) unless association.is_a? ActiveRecord::Reflection::AssociationReflection
     
@@ -324,21 +164,28 @@ module Entrails::ActiveRecord::FindByAssociation
     association_type ||= association_type.is_a?(String) ? association_type.constantize : association.klass
 
     options = {}
-    options[:select] = case association.macro
-                       when :belongs_to, :has_and_belongs_to_many then association_type.primary_key
-                       else association.primary_key_name
-                       end
+    
+    key_column = case association.macro
+                 when :belongs_to,
+                      :has_and_belongs_to_many : association_type.primary_key
+                 else association.primary_key_name
+                 end
+
+    options[:select] = "#{key_column} _id"
     segments = []
-    # segments << "#{options[:select]} IS NOT NULL"
+    segments << "#{key_column} IS NOT NULL"
     conditions and segments << association_type.__send__(:sanitize_sql, conditions)
     association.options[:conditions] and segments << association_type.__send__(:sanitize_sql, association.options[:conditions])
     association.options[:as] and segments << association_type.__send__(:sanitize_sql, (association_klass.reflect_on_association(association.options[:as].to_sym).options[:foreign_type] || :"#{association.options[:as]}_type").to_sym => (through_type||self.to_s))
     segments.reject! {|c|c.blank?}
     options[:conditions] = segments.size > 1 ? "(#{segments.join(') AND (')})" : segments.first unless segments.empty?
+
     # subqueries in MySQL can not use order or limit
     # options[:order] = association.options[:order] if association.options[:order]
     # options[:limit] = association.options[:limit] if association.options[:limit]
+
     options
+
   end
   
   # Update the dynamic finders to allow referencing association names instead of
