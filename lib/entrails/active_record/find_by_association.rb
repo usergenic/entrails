@@ -72,8 +72,7 @@ module Entrails::ActiveRecord::FindByAssociation
 
         raise "Unknown source_association for HasManyThroughAssociation #{self}##{association.name}." unless source_association
 
-        through_association.klass.__send__(:construct_find_by_association_conditions_subquery_sql,
-          through_association, { source_association.name => conditions }, :through_type => name)
+        construct_find_by_association_conditions_subquery_sql(through_association, { source_association.name => conditions })
       else
         construct_find_by_association_conditions_subquery_sql(association, conditions, :type => association_type)
       end
@@ -134,8 +133,7 @@ module Entrails::ActiveRecord::FindByAssociation
     end
 
     if conditions and subquery_sql = association_type.__send__(:construct_finder_sql, 
-      options_for_find_by_association_conditions_subquery(association, conditions, :type => association_type, 
-                                                                                   :through_type => through_type))
+      options_for_find_by_association_conditions_subquery(association, conditions, :type => association_type, :through_type => through_type))
 
       subquery_sql &&= "(SELECT _id FROM (#{subquery_sql}) _tmp)" if use_derived_table_hack_for_subquery_optimization?
 
