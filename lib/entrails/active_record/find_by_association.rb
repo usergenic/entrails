@@ -90,7 +90,7 @@ module Entrails::ActiveRecord::FindByAssociation
         through_association = reflect_on_association(association.through_reflection.name)
         through_association.klass.__send__(:construct_finder_sql, options_for_find_by_association_conditions_subquery(through_association, nil))
       else
-        association_klass.__send__(:construct_finder_sql, options_for_find_by_association_conditions_subquery(association, nil, association_klass))
+        association.klass.__send__(:construct_finder_sql, options_for_find_by_association_conditions_subquery(association, nil, association.klass))
       end
 
     nil_subquery_sql = "(SELECT _id FROM (#{nil_subquery_sql}) _tmp)" if use_derived_table_hack_for_subquery_optimization?
@@ -222,7 +222,7 @@ module Entrails::ActiveRecord::FindByAssociation
     segments << "#{key_column} IS NOT NULL"
     conditions and segments << association_type.__send__(:sanitize_sql, conditions)
     association.options[:conditions] and segments << association_type.__send__(:sanitize_sql, association.options[:conditions])
-    association.options[:as] and segments << association_type.__send__(:sanitize_sql, (association_klass.reflect_on_association(association.options[:as].to_sym).options[:foreign_type] || :"#{association.options[:as]}_type").to_sym => (through_type||self.to_s))
+    association.options[:as] and segments << association_type.__send__(:sanitize_sql, (association_type.reflect_on_association(association.options[:as].to_sym).options[:foreign_type] || :"#{association.options[:as]}_type").to_sym => (through_type||self.to_s))
     segments.reject! {|c|c.blank?}
     options[:conditions] = segments.size > 1 ? "(#{segments.join(') AND (')})" : segments.first unless segments.empty?
 
