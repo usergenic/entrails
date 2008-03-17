@@ -16,7 +16,8 @@ module Entrails::ActiveRecord::BetterConditions
       when :or,  'or'  : joiner = 'OR'
       when :not, 'not' : negate = !negate
       else
-        return sanitize_sql_array_without_better_conditions(array) if index == 0
+        # following matches pattern for ActiveRecord's built-in array support
+        return sanitize_sql_array_without_better_conditions(array) if index == 0 and element.is_a?(String)
         conditions << sanitize_sql(element)
       end
     end
