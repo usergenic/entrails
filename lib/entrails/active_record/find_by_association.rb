@@ -90,7 +90,7 @@ module Entrails::ActiveRecord::FindByAssociation
         through_association = reflect_on_association(association.through_reflection.name)
         through_association.klass.__send__(:construct_finder_sql, options_for_find_by_association_conditions_subquery(through_association, nil))
       else
-        association.klass.__send__(:construct_finder_sql, options_for_find_by_association_conditions_subquery(association, nil, association.klass))
+        association.klass.__send__(:construct_finder_sql, options_for_find_by_association_conditions_subquery(association, nil, :type => association.klass))
       end
 
     nil_subquery_sql = "(SELECT _id FROM (#{nil_subquery_sql}) _tmp)" if use_derived_table_hack_for_subquery_optimization?
