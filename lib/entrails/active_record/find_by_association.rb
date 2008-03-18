@@ -72,7 +72,11 @@ module Entrails::ActiveRecord::FindByAssociation
 
         raise "Unknown source_association for HasManyThroughAssociation #{self}##{association.name}." unless source_association
 
-        construct_find_by_association_conditions_subquery_sql(through_association, { source_association.name => conditions })
+        source_subquery_sql = through_association.klass.__send__(:construct_find_by_association_conditions_subquery_sql,
+          source_association, conditions, :type => association_type)
+
+        through_subquery_sql = construct_find_by_association_conditions_subquery_sql(
+          through_association, source_subquery_sql, :type => through_association.klass)
       else
         construct_find_by_association_conditions_subquery_sql(association, conditions, :type => association_type)
       end
@@ -220,7 +224,7 @@ module Entrails::ActiveRecord::FindByAssociation
     segments << "#{key_column} IS NOT NULL"
     conditions and segments << association_type.__send__(:sanitize_sql, conditions)
     association.options[:conditions] and segments << association_type.__send__(:sanitize_sql, association.options[:conditions])
-    association.options[:as] and segments << association_type.__send__(:sanitize_sql, (association_type.reflect_on_association(association.options[:as].to_sym).options[:foreign_type] || :"#{association.options[:as]}_type").to_sym => (through_type||self.to_s))
+    association.options[:as] and segments << association_type.__send__(:sanitize_sql, (association_type.reflect_on_association(association.options[:as].to_sym).options[:foreign_type] || :"#{association.options[:as]}_type").to_sym => (through_type||self).name)
     segments.reject! {|c|c.blank?}
     options[:conditions] = segments.size > 1 ? "(#{segments.join(') AND (')})" : segments.first unless segments.empty?
 
