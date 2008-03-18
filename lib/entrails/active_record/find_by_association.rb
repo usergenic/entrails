@@ -124,13 +124,13 @@ module Entrails::ActiveRecord::FindByAssociation
     association_type ||= association_type.is_a?(String) ? association_type.constantize : association.klass
 
     conditions =
-      case conditions
-      when [] : nil
-      when Entrails::ActiveRecord::FindByAssociation : [conditions]
+      case
+      when (conditions == []) : nil
+      when (conditions.class.is_a?(Entrails::ActiveRecord::FindByAssociation)) : [conditions]
       else conditions
       end
-    
-    if conditions.is_a?(Array) and conditions.all?{|c|c.is_a?(Entrails::ActiveRecord::FindByAssociation)}
+      
+    if conditions.is_a?(Array) and conditions.all?{|c|c.class.is_a?(Entrails::ActiveRecord::FindByAssociation)}
       ids = conditions.map{|c| c.attributes[association_type.primary_key] }
       ids = ids.first unless ids.size > 1
       conditions = { association_type.primary_key => ids }
