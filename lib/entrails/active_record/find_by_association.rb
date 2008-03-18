@@ -96,7 +96,7 @@ module Entrails::ActiveRecord::FindByAssociation
         association.klass.__send__(:construct_finder_sql, options_for_find_by_association_conditions_subquery(association, nil, :type => association.klass))
       end
 
-    nil_subquery_sql = "(SELECT _id FROM (#{nil_subquery_sql}) _tmp)" if use_derived_table_hack_for_subquery_optimization?
+    nil_subquery_sql = "SELECT _id FROM (#{nil_subquery_sql}) _tmp" if use_derived_table_hack_for_subquery_optimization?
 
     case association.macro
     when :belongs_to : "#{table_name}.#{connection.quote_column_name(association.primary_key_name)} NOT IN " <<
@@ -139,7 +139,7 @@ module Entrails::ActiveRecord::FindByAssociation
     if conditions and subquery_sql = association_type.__send__(:construct_finder_sql, 
       options_for_find_by_association_conditions_subquery(association, conditions, :type => association_type, :through_type => through_type))
 
-      subquery_sql &&= "(SELECT _id FROM (#{subquery_sql}) _tmp)" if use_derived_table_hack_for_subquery_optimization?
+      subquery_sql &&= "SELECT _id FROM (#{subquery_sql}) _tmp" if use_derived_table_hack_for_subquery_optimization?
 
       case association.macro
       when :belongs_to : "#{table_name}.#{connection.quote_column_name(association.primary_key_name)} IN (#{subquery_sql})"
