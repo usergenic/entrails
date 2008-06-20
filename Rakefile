@@ -5,6 +5,48 @@ require './lib/entrails.rb'
 require 'rake'
 require 'spec/rake/spectask'
 
+desc "Generates the gemspec, Manifest.txt and builds the gem."
+task :gem => ["gem:gemspec","gem:manifest"]
+
+namespace :gem do
+  desc "Generates the entrails.gemspec file"
+  task :gemspec do
+    gemspec_code = <<-gemspec
+      Gem::Specification.new do |s|
+        s.name = %q{entrails}
+        s.version = #{Entrails::VERSION.inspect}
+
+        s.specification_version = 2 if s.respond_to? :specification_version=
+
+        s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
+        s.authors = #{Entrails::AUTHORS.inspect}
+        s.date = #{Time.now.strftime('%Y-%m-%d').inspect}
+        s.default_executable = %q{entrails}
+        s.description = #{Entrails::DESCRIPTION.inspect}
+        s.email = #{Entrails::EMAIL.inspect}
+        s.executables = ["entrails"]
+        s.extra_rdoc_files = ["History.txt", "Manifest.txt", "README.txt"]
+        s.files = #{Entrails::MANIFEST.inspect}
+        s.has_rdoc = true
+        s.homepage = #{Entrails::HOMEPAGE.inspect}
+        s.rdoc_options = ["--main", "README.txt"]
+        s.require_paths = ["lib"]
+        s.rubygems_version = %q{1.1.1}
+        s.summary = #{Entrails::DESCRIPTION.inspect}
+      end
+    gemspec
+    gemspec = File.open(File.join(File.dirname(__FILE__),'entrails.gemspec'),'w')
+    gemspec.write(gemspec_code)
+    gemspec.close
+  end
+  desc "Generates the Manifest.txt file"
+  task :manifest do
+    manifest = File.open(File.join(File.dirname(__FILE__),'Manifest.txt'),'w')
+    manifest.write(Entrails::MANIFEST.join("\n")<<"\n")
+    manifest.close
+  end
+end
+
 desc "Run all specs"
 Spec::Rake::SpecTask.new do |t|
   t.spec_files = FileList['spec/**/*_spec.rb']
