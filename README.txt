@@ -9,7 +9,7 @@ since I implimented them.
 
 The real action is happening in the following two files at the moment:
 http://github.com/brendan/entrails/tree/master/lib/entrails/active_record/better_conditions.rb
-http://github.com/brendan/entrails/tree/master/lib/entrails/active_record/find_by_association.rb= entrails
+http://github.com/brendan/entrails/tree/master/lib/entrails/active_record/find_by_association.rb
 
 == FEATURES/PROBLEMS:
 
