@@ -1,5 +1,6 @@
 bin
 bin/entrails
+entrails-1.0.1.gem
 entrails.gemspec
 History.txt
 init.rb

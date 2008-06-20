@@ -7,9 +7,9 @@ module Entrails
   MANIFEST=Dir.glob(File.join(FOLDER,'**','*')).map{|path|path[FOLDER.size+1..-1]}
   HOMEPAGE="http://github.com/brendan/entrails"
   class << self
-    def activate
-      ActiveRecord::Base.extend Entrails::ActiveRecord::BetterConditions
-      ActiveRecord::Base.extend Entrails::ActiveRecord::FindByAssociation
+    def apply
+      ::ActiveRecord::Base.extend ::Entrails::ActiveRecord::BetterConditions
+      ::ActiveRecord::Base.extend ::Entrails::ActiveRecord::FindByAssociation
     end
   end
 end

@@ -1,2 +1,2 @@
 require 'entrails'
-Entrails.activate
+Entrails.apply
