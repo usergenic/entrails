@@ -1,1 +1,2 @@
 require 'entrails'
+Entrails.activate

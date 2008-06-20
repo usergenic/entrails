@@ -1,0 +1,7 @@
+History.txt
+Manifest.txt
+README.txt
+Rakefile
+bin/entrails
+lib/entrails.rb
+test/test_entrails.rb

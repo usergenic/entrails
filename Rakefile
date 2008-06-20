@@ -1,7 +1,16 @@
 #!/usr/bin/env ruby
 $LOAD_PATH << File.join(File.dirname(__FILE__), 'lib')
+require 'rubygems'
+require 'hoe'
+require './lib/entrails.rb'
 require 'rake'
 require 'spec/rake/spectask'
+
+Hoe.new('entrails', Entrails::VERSION) do |p|
+  p.developer('Brendan Baldwin', 'brendan@usergenic.com')
+end
+
+# vim: syntax=Ruby
 
 desc "Run all specs"
 Spec::Rake::SpecTask.new do |t|
