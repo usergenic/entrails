@@ -25,16 +25,14 @@ http://github.com/brendan/entrails/tree/master/lib/entrails/active_record/find_b
 
 == INSTALL:
 
-* sudo gem install entrails
+* sudo gem install brendan-entrails -s http://gems.github.com
 * require 'entrails' in your rails app
-* can work as a plugin or a gem
-* cd YOUR_RAILS_APP && entrails install-plugin .
 
 == LICENSE:
 
 (The MIT License)
 
-Copyright (c) 2008 FIX
+Copyright (c) 2008 Brendan Baldwin
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the

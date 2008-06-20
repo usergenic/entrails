@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
   s.email = ["brendan@usergenic.com"]
   s.executables = ["entrails"]
   s.extra_rdoc_files = ["History.txt", "Manifest.txt", "README.txt"]
-  s.files = ["History.txt", "Manifest.txt", "README.txt", "Rakefile", "bin/entrails", "lib/entrails.rb", "test/test_entrails.rb"]
+  s.files = File.read(File.expand_path(File.join(File.dirname(__FILE__),'Manifest.txt'))).split("\n").reject{|filename|filename.to_s.strip != ""}
   s.has_rdoc = true
   s.homepage = %q{http://github.com/brendan/entrails}
   s.rdoc_options = ["--main", "README.txt"]

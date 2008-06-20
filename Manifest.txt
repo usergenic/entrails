@@ -4,4 +4,9 @@ README.txt
 Rakefile
 bin/entrails
 lib/entrails.rb
-test/test_entrails.rb
+lib/entrails/active_record.rb
+lib/entrails/active_record/better_conditions.rb
+lib/entrails/active_record/find_by_association.rb
+spec/entrails/active_record/better_conditions_spec.rb
+spec/entrails/active_record/find_by_association_spec.rb
+spec/spec_helper.rb
