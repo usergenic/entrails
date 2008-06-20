@@ -12,14 +12,24 @@ Gem::Specification.new do |s|
   s.email = ["brendan@usergenic.com"]
   s.executables = ["entrails"]
   s.extra_rdoc_files = ["History.txt", "Manifest.txt", "README.txt"]
-  s.files = File.read(File.expand_path(File.join(File.dirname(__FILE__),'Manifest.txt'))).split("\n").reject{|filename|filename.to_s.strip != ""}
+  s.files = %w{
+    History.txt
+    Manifest.txt
+    README.txt
+    Rakefile
+    bin/entrails
+    lib/entrails.rb
+    lib/entrails/active_record.rb
+    lib/entrails/active_record/better_conditions.rb
+    lib/entrails/active_record/find_by_association.rb
+    spec/entrails/active_record/better_conditions_spec.rb
+    spec/entrails/active_record/find_by_association_spec.rb
+    spec/spec_helper.rb
+  }
   s.has_rdoc = true
   s.homepage = %q{http://github.com/brendan/entrails}
   s.rdoc_options = ["--main", "README.txt"]
   s.require_paths = ["lib"]
-  s.rubyforge_project = %q{entrails}
   s.rubygems_version = %q{1.1.1}
   s.summary = %q{This is a collection of extensions to Rails internals that I've found to be absolutely indispensible since I implimented them}
-
-  s.add_dependency(%q<hoe>, [">= 1.6.0"])
 end
