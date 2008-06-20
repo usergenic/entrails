@@ -1,3 +1,13 @@
+=== 1.0.2 / 2008-06-20
+
+* Fixed the bug.  Now its usable.  I need to document though.  This really should be version 0.x.x  Oh well!
+
+=== 1.0.1 / 2008-06-20
+
+* 1 major enhancement
+
+  * Actually added a bug.  Also got gemspec to be correct.
+
 === 1.0.0 / 2008-06-20
 
 * 1 major enhancement
