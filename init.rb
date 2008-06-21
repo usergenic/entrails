@@ -1,2 +1,1 @@
 require 'entrails'
-Entrails.apply

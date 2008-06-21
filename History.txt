@@ -1,3 +1,8 @@
+=== 1.0.3 / 2008-06-21
+
+* Removed the need to all Entrails.apply after load.  Now it just automatically extends the base classes if
+  they exist.  If you want to run a single piece of Entrails, just require it before the Rails initializer. 
+
 === 1.0.2 / 2008-06-20
 
 * Fixed the bug.  Now its usable.  I need to document though.  This really should be version 0.x.x  Oh well!
