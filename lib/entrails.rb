@@ -8,9 +8,15 @@ module Entrails
   HOMEPAGE="http://github.com/brendan/entrails"
 end
 
+require 'entrails/action_controller'
 require 'entrails/active_record'
 
-if defined?(ActiveRecord::Base)
+if defined?(ActionController)
+  ActionController::Routing::RouteSet.send(:include, Entrails::ActionController::NamedRouteParameter)
+  ActionController::Base.send(:include, Entrails::ActionController::TemplateForReferer)
+end
+
+if defined?(ActiveRecord)
   ActiveRecord::Base.extend Entrails::ActiveRecord::BetterConditions
   ActiveRecord::Base.extend Entrails::ActiveRecord::FindByAssociation
 end

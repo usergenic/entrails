@@ -5,6 +5,10 @@ History.txt
 init.rb
 lib
 lib/entrails
+lib/entrails/action_controller
+lib/entrails/action_controller/named_route_parameter.rb
+lib/entrails/action_controller/template_for_referer.rb
+lib/entrails/action_controller.rb
 lib/entrails/active_record
 lib/entrails/active_record/better_conditions.rb
 lib/entrails/active_record/find_by_association.rb
