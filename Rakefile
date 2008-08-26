@@ -24,7 +24,7 @@ namespace :gem do
         s.default_executable = %q{entrails}
         s.description = #{Entrails::DESCRIPTION.inspect}
         s.email = #{Entrails::EMAIL.inspect}
-        s.executables = ["entrails"]
+        s.executables = []
         s.extra_rdoc_files = ["History.txt", "Manifest.txt", "README.txt"]
         s.files = #{Entrails::MANIFEST.inspect}
         s.has_rdoc = true
