@@ -241,7 +241,7 @@ module Entrails::ActiveRecord::FindByAssociation
   # database engines.  This hack has been shown to significantly benefit query times
   # for mysql and sqlite3. (has not yet been tested with other engines.)
   def use_derived_table_hack_for_subquery_optimization?
-    true
+    false
   end
   
   def self.extended(host)
