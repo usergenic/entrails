@@ -30,7 +30,7 @@
 # Note that this behavior is not enabled just for rjs templates-- You can use it for
 # any formats.  
 #
-Rails uses the controller and action names to determine the
+# Rails uses the controller and action names to determine the
 # name of the template to load.
 module Entrails::ActionController::TemplateForReferer
   
