@@ -38,11 +38,9 @@ module Entrails::ActionController::TemplateForReferer
   
   def default_template_name_with_template_for_referer
     template_name = default_template_name_without_template_for_referer
-    begin
-      @template.pick_template("#{template_name}_for_#{referer_named_route}")
-    rescue
-      template_name
-    end
+    template_name_for_referer = "#{template_name}_for_#{referer_named_route}"
+    return template_name_for_referer if template_exists?(template_name_for_referer)
+    template_name
   end
   
   def referer_host
