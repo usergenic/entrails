@@ -1,12 +1,12 @@
       Gem::Specification.new do |s|
         s.name = %q{entrails}
-        s.version = "1.0.4"
+        s.version = "1.0.5"
 
         s.specification_version = 2 if s.respond_to? :specification_version=
 
         s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
         s.authors = ["Brendan Baldwin"]
-        s.date = "2008-08-26"
+        s.date = "2009-01-29"
         s.default_executable = %q{entrails}
         s.description = "This is a collection of extensions to Rails internals that I've found to be absolutely indispensible since I implimented them.  The real action is happening in the following two files at the moment: http://github.com/brendan/entrails/tree/master/lib/entrails/active_record/better_conditions.rb http://github.com/brendan/entrails/tree/master/lib/entrails/active_record/find_by_association.rb"
         s.email = ["brendan@usergenic.com"]

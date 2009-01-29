@@ -163,7 +163,7 @@ module Entrails::ActiveRecord::FindByAssociation
     match = /^find_or_(initialize|create)_by_([_a-zA-Z]\w*)$/.match(method_id.to_s) unless match
     if match
       action_type = ($1 =~ /by/) ? :finder : :instantiator
-      attribute_names = extract_attribute_names_from_match(match)
+      attribute_names = $2.split(/_and_/)
       options_argument = (arguments.size > attribute_names.size) ? arguments.last : {}
       associations = {}
       index = 0
