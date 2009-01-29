@@ -162,8 +162,10 @@ module Entrails::ActiveRecord::FindByAssociation
     match = /^find_(all_by|by)_([_a-zA-Z]\w*)$/.match(method_id.to_s)
     match = /^find_or_(initialize|create)_by_([_a-zA-Z]\w*)$/.match(method_id.to_s) unless match
     if match
-      action_type = ($1 =~ /by/) ? :finder : :instantiator
-      attribute_names = $2.split(/_and_/)
+      action_type_segment = $1
+      attribute_names_segment = $2
+      action_type = (action_type_segment =~ /by/) ? :finder : :instantiator
+      attribute_names = attribute_names_segment.split(/_and_/)
       options_argument = (arguments.size > attribute_names.size) ? arguments.last : {}
       associations = {}
       index = 0
