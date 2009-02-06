@@ -36,11 +36,14 @@ module Entrails::ActionController::TemplateForReferer
   
   private
   
-  def default_template_name_with_template_for_referer
-    template_name = default_template_name_without_template_for_referer
+  def default_template_name_with_template_for_referer(*args)
+    template_name = default_template_name_without_template_for_referer(*args)
     template_name_for_referer = "#{template_name}_for_#{referer_named_route}"
-    return template_name_for_referer if template_exists?(template_name_for_referer)
-    template_name
+    begin
+      view_paths.find_template(template_name_for_referer, default_template_format)
+    rescue ActionView::MissingTemplate
+      template_name
+    end
   end
   
   def referer_host
