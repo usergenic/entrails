@@ -187,7 +187,7 @@ module Entrails::ActiveRecord::FindByAssociation
         set_readonly_option!(find_options)
         with_scope :find => find_options do
           if action_type == :finder
-            finder = determine_finder(match)
+            finder = match.captures.first == 'all_by' ? :find_every : :find_initial
             return __send__(finder, options_argument) if non_associations.empty?
             return __send__("find#{'_all' if finder == :find_every}_by_#{non_associations.join('_and_')}".to_sym, *arguments)
           else

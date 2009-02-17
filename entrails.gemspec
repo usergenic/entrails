@@ -1,6 +1,6 @@
       Gem::Specification.new do |s|
         s.name = %q{entrails}
-        s.version = "1.0.7"
+        s.version = "1.0.8"
 
         s.specification_version = 2 if s.respond_to? :specification_version=
 
